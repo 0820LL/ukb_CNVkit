@@ -4,6 +4,7 @@ import argparse
 import logging
 import os
 import json
+import sys
 import time
 
 def send_json_message(analysis_path:str, send_message_script: str, message: dict, step_file_name:str) -> None:
@@ -21,10 +22,9 @@ def steward(config_file_path:str, ukb_cnvkit_path:str, send_message_script:str) 
     params_d = {
         'tumor_bam'  : config_d['ukbParams']['tumor_bam'],
         'normal_bam' : config_d['ukbParams']['normal_bam'],
-        'ref_fa'     : config_d['ukbParams']['ref_fa'],
+        'ref_fa'     : config_d['ukbParams']['ref_file'],
         'bed_file'   : config_d['ukbParams']['bed_file'],
         'anno_file'  : config_d['ukbParams']['anno_file'],
-        'threads_num': config_d['ukbParams']['threads_num']
     }
     params_file_path = '{}/params.json'.format(analysis_path)
     with open(params_file_path, 'w') as params_f:
@@ -33,12 +33,12 @@ def steward(config_file_path:str, ukb_cnvkit_path:str, send_message_script:str) 
     return_value = os.system(ukb_cnvkit_command)
     logging.info(ukb_cnvkit_command)
     logging.info('return value:{}\n'.format(str(return_value)))
-    time.sleep(5)
+    time.sleep(20)
     # send the result files 
     feedback_dict = {
         'uuid'          : config_d['uuid'],
         'ukbId'         : config_d['ukbId'],
-        'ukbToolsCode'  : config_d['ukbToolsCode'],
+        'ukbToolsCode'  : config_d['ukbToolCode'],
         'ukbToolName'   : config_d['ukbToolName'],
         'pipeline'      : 'ukb',
         'analysisStatus': '',
@@ -57,6 +57,7 @@ def steward(config_file_path:str, ukb_cnvkit_path:str, send_message_script:str) 
         feedback_dict['endDate']        = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
         feedback_dict['error']          = 1
         send_json_message(analysis_path, send_message_script, feedback_dict, 'start.json')
+        sys.exit()
     flag = 0
     while True:
         execution_trace_file = '{}/results'.format(analysis_path)
